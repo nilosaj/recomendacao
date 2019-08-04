@@ -4,15 +4,15 @@ from flask_api import status
 import json, logging
 import DatabaseUtils
 
-app = Flask(__name__)
-api = Api(app)
+app_desafio = Flask(__name__)
+api = Api(app_desafio)
 parser = api.parser()
 parser.add_argument('user', type=str, help='Usuario a ser utilizado no cadastro da visualizacao', location='form')
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
-@api.route('/<path:article>/view')
+@api.route('/<path:article>/view/')
 class Document(Resource):
     @api.expect(parser)
     def post(self, article):
@@ -29,10 +29,10 @@ class Document(Resource):
                 return None, status.HTTP_200_OK
 
 
-@api.route('/<path:article>/similar')
+@api.route('/<path:article>/similar/')
 class Similarity(Resource):
     def get(self, article):
-        resp = [{"url": t[0], "score":t[1]} for t in DatabaseUtils.get_similars(article)]
+        resp = DatabaseUtils.get_similars(article)
         logging.debug(type(resp))
         if len(resp) > 0:
             return resp, status.HTTP_200_OK
@@ -50,5 +50,14 @@ class Persistence(Resource):
             return None, status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
+@api.route('/info')
+class Info(Resource):
+    def get(self):
+        resp = DatabaseUtils.get_db_info()
+        if resp:
+            return resp, status.HTTP_200_OK
+        else:
+            return None, status.HTTP_500_INTERNAL_SERVER_ERROR
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app_desafio.run(debug=True, host='0.0.0.0',port=8080)
