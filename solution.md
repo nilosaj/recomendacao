@@ -119,7 +119,7 @@ de forma que o DatabaseUtility apenas  trabalhe com dicts e lists .
 
 ### Mudanças de arquitetura
 
-- A arquitetura atual calcula os scores (indice jaccard) em tempo de consulta sendo sucetivel ao crescimento da base . uma mudança de
+- A arquitetura atual calcula os scores (indice jaccard) em tempo de consulta sendo suscetível ao crescimento da base . uma mudança de
 abordagem visando pré processamento destes indices  através de um processo batch recorrente pode reduzir drásticamente o tempo de retorno da interface 
 a custo da informação retornada não representar o estado atual da base . Considerando que a base é referente a Paginas x Usuarios
 pode-se deduzir que será necessário utilizar tecnologias de maior porte  como por exemplo Apache Spark  e Hive para o processamento Batch e HBase para armazenamento das chaves
