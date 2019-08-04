@@ -1,5 +1,5 @@
 import RedisConnector
-from operator import itemgetter
+
 
 dbConn = RedisConnector.connectRedis()
 
@@ -18,7 +18,7 @@ def register_view(user, article):
     if not(dbConn.sismember("articles", article)): # criacao do Redis SET de artigos
         dbConn.sadd("articles", article)
         resp["document"] = True
-    if not(dbConn.sismember("user_article:"+user, article)):  # criacao do Redis SET de artigos visualizados por cada usuario
+    if not(dbConn.sismember("user:"+user, article)):  # criacao do Redis SET de artigos visualizados por cada usuario
         dbConn.sadd("user_article:"+user, article)
         resp["user_article"] = True
     if not(dbConn.sismember("article:"+article, user)): # criacao do Redis SET de usuarios que visualizaram cada arquivo
@@ -41,18 +41,12 @@ def get_similars(article):
             if varticle != article:
                 candidates.add(varticle)
 
-    jc = calcJaccard(users_viewed_article, candidates)
-    return sorted([{"url": t[0], "score":t[1]} for t in jc], key=itemgetter('score', 'url'), reverse=True)
+    return calcJaccard(users_viewed_article, candidates)
 
 
 
 def clear_database():
     return dbConn.flushdb()
-
-
-def get_db_info():
-    return dbConn.info()
-
 
 
 def calcJaccard(users_original_article,candidate_articles):
@@ -66,5 +60,5 @@ def calcJaccard(users_original_article,candidate_articles):
     for varticle in candidate_articles:
         varticle_users = dbConn.smembers("article:"+ varticle)
         resp[varticle] = len(users_original_article.intersection(varticle_users))/(len(users_original_article.union(varticle_users)))
-    return resp.items()
+    return sorted(resp.items(), key=lambda x: x[1], reverse=True)
 
