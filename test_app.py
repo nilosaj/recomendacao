@@ -34,7 +34,7 @@ class TestView(unittest.TestCase):
         """
         Teste referente a interface de criação de novas visualizacoes para novos usuários
         """
-        logging.info("Teste de cadastro de  visualizacao por novo usuario")
+        logging.info("Teste de cadastro de nova visualizacao por novo usuario")
         resp = self.app.post('/98/view/', data="user=Z", content_type='application/x-www-form-urlencoded')
         self.assertEqual(resp.status_code, 201)
 
@@ -42,7 +42,7 @@ class TestView(unittest.TestCase):
         """
         Teste referente a interface de criação de novas visualizacoes para usuario pre existente
         """
-        logging.info("Teste de cadastro de  visualizacao por usuario existente na base")
+        logging.info("Teste de cadastro de nova visualizacao por usuario existente na base")
         resp = self.app.post('/97/view/', data="user=Z", content_type='application/x-www-form-urlencoded')
         self.assertEqual(resp.status_code, 201)
 
@@ -50,11 +50,14 @@ class TestView(unittest.TestCase):
         """
         Teste referente a tentativa de recriar uma visualizacao
         """
-        logging.info("Teste de repeticao de cadastro de  visualizacao")
+        logging.info("Teste de recadastrar  visualizacao")
         resp = self.app.post('/2/view/', data="user=A", content_type='application/x-www-form-urlencoded')
         self.assertEqual(resp.status_code, 200)
 
     def test_similar_view(self):
+        """
+        Teste referente a consulta de  similaridade
+        """
         logging.info("Teste de retorno de consulta de similaridade ")
         expected_data = [{"url": "2", "score": 1.0}, {"url": "5", "score": 0.3333333333333333},{"url": "4", "score": 0.3333333333333333}, {"url": "3", "score": 0.3333333333333333}]
         resp = self.app.get('/1/similar/')
@@ -86,11 +89,13 @@ class TestView(unittest.TestCase):
         expected_data = [{"url": "2", "score": 0.75}, {"url": "5", "score": 0.3333333333333333},{"url": "4", "score": 0.3333333333333333}, {"url": "3", "score": 0.3333333333333333}]
         self.assertEqual(resp.get_data(as_text=True).replace("\n", ''), json.dumps(expected_data).replace("'", '"'))
 
+
+
     def test_similarity_new_similar(self):
         """
         Teste referente a mudanca na lista de similaridades devido a visualizacao de  um novo documento por parte de um usuario que visualizou documento da busca
         """
-        logging.info("Teste de inclusao de visualizacao de novo documento por usuario que visualizou documento da busca")
+        logging.info("Teste de mudança de retorno por inclusao de visualizacao de novo documento por usuario que visualizou documento da busca")
         expected_data = [{"url": "2", "score": 1.0}, {"url": "5", "score": 0.3333333333333333},{"url": "4", "score": 0.3333333333333333}, {"url": "3", "score": 0.3333333333333333}]
         resp = self.app.get('/1/similar/')
         self.assertEqual(resp.status_code, 200)
@@ -103,6 +108,14 @@ class TestView(unittest.TestCase):
         expected_data = [{"url": "2", "score": 1.0}, {"url": "9", "score": 0.3333333333333333}, {"url": "5", "score": 0.3333333333333333},{"url": "4", "score": 0.3333333333333333}, {"url": "3", "score": 0.3333333333333333}]
         self.assertEqual(resp.get_data(as_text=True).replace("\n", ''), json.dumps(expected_data).replace("'", '"'))
 
+
+    def test_register_view_without_user(self):
+        """
+        Teste referente a interface de criação de novas visualizacoes sem preenchimento de usuario
+        """
+        logging.info("Teste de cadastro de nova visualizacao sem preenchimento de usuario")
+        resp = self.app.post('/97/view/', data="", content_type='application/x-www-form-urlencoded')
+        self.assertEqual(resp.status_code, 400)
 
 if __name__ == '__main__':
     unittest.main()

@@ -38,14 +38,14 @@ Efetivamente para  verificação de similaridade serão utilizados os SETS `"use
 
 ## Interface `GET /<url>/similar/`
 
-A Interface de recuperação de artigos similares recupera a URL do path , que é a pagina da consulta de similaridade ,  e  efetua  as seguintes  ações:
-1. Recupera a lista de usuários que já acessaram esta URL  a partir do SET `"article:<url>"`
-2. Para cada usuário descrito no passo anterior recupera através do SET `"user_article:<user>"` todas as paginas visualizadas por este usuário excetuando a pagina da consulta . todas estas paginas são considerados candidatos a serem paginas similares e  armazenados.
+A Interface de recuperação de artigos similares recupera a `<url>` do path , que é a pagina da consulta de similaridade ,  e  efetua  as seguintes  ações:
+1. Recupera a lista de usuários que já acessaram esta `<url>`  a partir do SET `"article:<url>"`
+2. Para cada usuário descrito no passo anterior recupera através do SET `"user_article:<user>"` todas as paginas visualizadas por este usuário excetuando a pagina da consulta . todas estas paginas são considerados candidatos a serem paginas similares .
 3. Para cada página candidata será calculada a distância Jaccard em relação a pagina da consulta considerando os usuários que acessaram estas paginas , isto é:
 	Seja A o conjunto de usuários que acessou a página  da consulta
 	Seja B o conjunto de usuários que acessou a pagina candidata corrente
 	`Jaccard = tamanho(A.intersect(B)) / tamanho(A.union(B)) `
-4. Após o calculo da distância de todas  as paginas candidatas em relação à pagina da consulta  serão retornadas as  10 primeiras em ordem decrescente de score
+4. Após o calculo da distância de todas  as paginas candidatas em relação à pagina da consulta  serão retornadas as  10 primeiras em ordem decrescente de score e url.
 
 Utilizando o exemplo descrito no documento de desafio:
 
@@ -72,28 +72,41 @@ A consulta por documentos similares ao documento 1 se daria da seguinte forma:
 	- [SET]  user:B -> [1,2,5]
 	- [SET]  user:C -> [1,2,3]
 	
-    que correspondem ao domínio de paginas 1,2,3,4,5  . remove-se a pagina da consulta , isto é pagina 1 , e o dominio final é 2,3,4,5 e  estas são as páginas candidatas.
+    que correspondem ao domínio de paginas 1,2,3,4,5  . remove-se a pagina da consulta , isto é Pagina 1 , e o dominio final é 2,3,4,5 e  estas são as páginas candidatas.
 
 3. para cada página candidata recuperar  seu conjunto de usuários e calcular a distância Jaccard :
 
-    ***Artigo 1 (pesquisa) x Artigo 2 (candidato)***
+    ***Pagina 1 (pesquisa) x Pagina 2 (candidato)***
     
-            - Artigo 1	[SET]  article:2 -> [A,B,C]
-            - Artigo 2	[SET]  article:2 -> [A,B,C]
-            - Jaccard (Artigo1,Artigo2)  =  (A,B,C).intersect(A,B,C)/ (A,B,C).union(A,B,C) 
-            - Jaccard (Artigo1,Artigo2)= 1.0
+            - Pagina 1	[SET]  article:2 -> [A,B,C]
+            - Pagina 2	[SET]  article:2 -> [A,B,C]
+            - Jaccard (Pagina 1,Pagina 2)  =  (A,B,C).intersect(A,B,C)/ (A,B,C).union(A,B,C) 
+            - Jaccard (Pagina 1,Pagina 2)= 1.0
     
-    ***Artigo 1(pesquisa) x Artigo 3(candidato)***
+    ***Pagina 1(pesquisa) x Pagina 3(candidato)***
 
-            - Artigo 1	[SET]  article:2 -> [A,B,C]
-            - Artigo 3	[SET]  article:2 -> [A]
-            - Jaccard (Artigo1,Artigo3)  =  (A,B,C).intersect(A)/ (A,B,C).union(A) 
-            - Jaccard (Artigo1,Artigo3)= 0.333333
+            - Pagina 1	[SET]  article:2 -> [A,B,C]
+            - Pagina 3	[SET]  article:2 -> [A]
+            - Jaccard (Pagina 1,Pagina 3)  =  (A,B,C).intersect(A)/ (A,B,C).union(A) 
+            - Jaccard (Pagina 1,Pagina 3)= 0.333333
 
 
 ##  Intereface `DELETE /`
 A interface de limpeza da base de dados remove  todas  as chaves existentes no Redis.
 
+# Cenarios de Testes:
+
+Foram definidos alguns cenários de teste de forma a avaliar o comportamento geral da  aplicação. Serão verificados codigos de status
+http (Ex: 201 para criações de chaves , 204 para consultas a chaves inexistentes  e etc) além da validação do payload retornado.
+1. Teste de cleanup da base
+2. Teste de cadastro de nova visualizacao por novo usuario
+3. Teste de cadastro de nova visualizacao por usuario existente na base
+4. Teste de recadastrar  visualizacao
+5. Teste de retorno de consulta de similaridade
+6. Teste de ausencia de  similaridade por pagina inexistente na base
+7. Teste de mudanca de  score de similaridade devido a nova visualizacao em pagina similar
+8. Teste de mudança de retorno por inclusao de visualizacao de novo documento por usuario que visualizou documento da busca
+9. Teste de criação de novas visualizacoes sem preenchimento de usuario
 
 # Melhorias:
 
@@ -113,14 +126,17 @@ separar em 2  grupos :
     - Consideral um filtro temporal para as páginas candidatas , isto é , somente considerar paginas existentes até X unidades de tempo.
     dado que esta é uma base de  similaridade um TTL pode ser definido para as chaves apropriadas permitindo que sejam removidas  automaticamente da base. 
     - Utilizar  um pool de chamadas assincronas para o calculo do score (indice jaccard), processo esse que atualmente é sequencial.
-- O código disponibilizado pode ser trabalhado de forma permitir que a camada de geracao de dados possua  uma abstração completa quanto a qual database
+- O código disponibilizado pode ser trabalhado de forma permitir que a camada de geração de dados possua  uma abstração completa quanto a qual database
 é utilizado. Na versão atual as  funções do Redis são  chamadas explicitamente no DatabaseUtility , porem uma camada intermediaria pode ser disponibilizada
 de forma que o DatabaseUtility apenas  trabalhe com dicts e lists .      
 
 ### Mudanças de arquitetura
 
 - A arquitetura atual calcula os scores (indice jaccard) em tempo de consulta sendo suscetível ao crescimento da base . uma mudança de
-abordagem visando pré processamento destes indices  através de um processo batch recorrente pode reduzir drásticamente o tempo de retorno da interface 
-a custo da informação retornada não representar o estado atual da base . Considerando que a base é referente a Paginas x Usuarios
-pode-se deduzir que será necessário utilizar tecnologias de maior porte  como por exemplo Apache Spark  e Hive para o processamento Batch e HBase para armazenamento das chaves
-, considerando-se todas as adequações necessárias para troca de Redis para HBase. 
+abordagem visando pré processamento destes scores  através de um processo batch recorrente pode reduzir drásticamente o tempo de retorno da interface 
+a custo da informação retornada não representar o estado mais recente da base . Considerando que a base é referente a Paginas x Usuarios 
+(Milhões de usuários x Milhares de páginas) pode-se esperar que será necessário utilizar tecnologias de maior porte como por exemplo Apache Spark  e Hive para o processamento Batch e HBase para armazenamento das chaves
+, considerando-se todas as adequações necessárias para troca de Redis para HBase (Ex: comunicação via Thrift) . 
+- O Código base da aplicação é escrito em Python (3.7) , porém dada a solução em containers seria interessante  avaliar a uma mudança para 
+utilização de Nodejs  visando uma maior economia de recursos do cluster ao passo de um fluxo de execução naturalmente assincrono. Neste
+caso a integração com HBase , assim como no cenário Python , seria  efetuado via protocolo Thrift .
