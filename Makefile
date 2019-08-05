@@ -8,4 +8,4 @@ run :
 
 test:
 	@echo "Executando testes da aplicação."
-	docker-compose exec principal python test_app.py
+	docker-compose exec desafio python test_app.py
