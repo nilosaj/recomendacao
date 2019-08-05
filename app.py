@@ -50,14 +50,7 @@ class Persistence(Resource):
             return None, status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@api.route('/info')
-class Info(Resource):
-    def get(self):
-        resp = DatabaseUtils.get_db_info()
-        if resp:
-            return resp, status.HTTP_200_OK
-        else:
-            return None, status.HTTP_500_INTERNAL_SERVER_ERROR
+
 
 if __name__ == '__main__':
     app_desafio.run(debug=True, host='0.0.0.0',port=8080)
